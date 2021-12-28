@@ -1,6 +1,13 @@
 var cvs, ctx
 var snow = []
 
+const size = { min: 1, max: 5 }
+
+const velocity = {
+    x: { target: 0, min: -0.7, max: 0.7 },
+    y: { target: 1, min:  0.5, max: 3.0 }
+}
+
 
 window.onload = function() {
     setupCanvas()
@@ -22,37 +29,44 @@ function setupCanvas() {
 
 function initSnow() {
     for(let i = 0; i < 150; i++) {
-        snow.push(getFlake())
+        snow.push(resetFlake())
     }
 }
 
 
-function getFlake() {
-    return {
-        x: Math.random() * cvs.width,
-        y: Math.random() * cvs.height,
-        r: Math.random() * 4 + 1,
-        v: { x: 0, y: 1 }
+function resetFlake(flake={}, y=null) {
+    flake.x = Math.random() * cvs.width
+    flake.y = y ? y : Math.random() * cvs.height
+    flake.r = (Math.random() * (size.max - size.min)) + size.min
+
+    const initVY = getInitVelocity(flake.r)
+
+    flake.v = {
+        x: velocity.x.target,
+        y: initVY, max: initVY * 2
     }
+
+    return flake
 }
 
 
-function resetFlake(f) {
-    f.x = Math.random() * cvs.width
-    f.y = -10
-    f.r = Math.random() * 4 + 1,
-    f.v = { x: 0, y: 1 }
+function getInitVelocity(r) {
+    const min = velocity.y.min
+    const max = velocity.y.max
+    
+    const range = max - min
+    const frac  = (r - size.min) / (size.max - size.min)
+
+    return min + (frac * range)
 }
 
 
 function updateSnow() {
     clear()
-    var flake
     
     for(let i = 0; i < snow.length; i++) {
-        flake = snow[i]
-        updateFlake(flake)
-        drawFlake(flake)
+        updateFlake(snow[i])
+        drawFlake(snow[i])
     }
 }
 
@@ -63,27 +77,32 @@ function clear() {
 
 
 function updateFlake(f) {
-    f.v.x = updateVelocity(f.v.x, 0.2, -0.5, 0.5)
-    f.v.y = updateVelocity(f.v.y, 0.2,  0.5, 2)
+    f.v.x = updateVelocity(f.v, 'x')
+    f.v.y = updateVelocity(f.v, 'y')
 
     updatePosition(f)
 }
 
 
-function updateVelocity(v, range, min, max) {
-    v = v + (Math.random() * range) - (range / 2)
-    if(v < min) { return min }
-    if(v > max) { return max }
-    return v
+function updateVelocity(v1, dir) {
+    const min = velocity[dir].min
+    const max = dir === 'y' ? v1.max : velocity[dir].max
+    const rng = (max - min) * 0.2
+
+    v2 = v1[dir] + (Math.random() * rng) - (rng / 2)
+
+    if(v2 < min) { return min }
+    if(v2 > max) { return max }
+    return v2
 }
 
 
 function updatePosition(f) {
-    f.x += f.v.x
-    f.y += f.v.y
+    f.x = f.x + f.v.x
+    f.y = f.y + f.v.y
 
     if(f.x > cvs.width || f.y > cvs.height) {
-        resetFlake(f)
+        f = resetFlake(f, -10)
     }
 }
 
