@@ -1,11 +1,13 @@
 var cvs, ctx
-var flakes = []
+var snow = []
+
 
 window.onload = function() {
     setupCanvas()
-    createFlakes()
-    window.setInterval(updateScene, 30)
+    initSnow()
+    window.setInterval(updateSnow, 30)
 }
+
 
 function setupCanvas() {
     cvs = document.getElementById('cvs')
@@ -17,13 +19,15 @@ function setupCanvas() {
     ctx.fillStyle = '#ffffff'
 }
 
-function createFlakes() {
+
+function initSnow() {
     for(let i = 0; i < 150; i++) {
-        flakes.push(flake())
+        snow.push(getFlake())
     }
 }
 
-function flake() {
+
+function getFlake() {
     return {
         x: Math.random() * cvs.width,
         y: Math.random() * cvs.height,
@@ -32,6 +36,7 @@ function flake() {
     }
 }
 
+
 function resetFlake(f) {
     f.x = Math.random() * cvs.width
     f.y = -10
@@ -39,20 +44,23 @@ function resetFlake(f) {
     f.v = { x: 0, y: 1 }
 }
 
-function updateScene() {
+
+function updateSnow() {
     clear()
     var flake
     
-    for(let i = 0; i < flakes.length; i++) {
-        flake = flakes[i]
+    for(let i = 0; i < snow.length; i++) {
+        flake = snow[i]
         updateFlake(flake)
         drawFlake(flake)
     }
 }
 
+
 function clear() {
     ctx.clearRect(0, 0, cvs.width, cvs.height);
 }
+
 
 function updateFlake(f) {
     f.v.x = updateVelocity(f.v.x, 0.2, -0.5, 0.5)
@@ -61,12 +69,14 @@ function updateFlake(f) {
     updatePosition(f)
 }
 
+
 function updateVelocity(v, range, min, max) {
     v = v + (Math.random() * range) - (range / 2)
     if(v < min) { return min }
     if(v > max) { return max }
     return v
 }
+
 
 function updatePosition(f) {
     f.x += f.v.x
@@ -76,6 +86,7 @@ function updatePosition(f) {
         resetFlake(f)
     }
 }
+
 
 function drawFlake(f) {
     ctx.beginPath()
