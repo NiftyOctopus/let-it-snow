@@ -1,18 +1,19 @@
 var cvs, ctx
 var snow = []
+var last = 0
 
 const size = { min: 1, max: 5 }
 
 const velocity = {
-    x: { target: 0, min: -0.7, max: 0.7 },
-    y: { target: 1, min:  0.5, max: 3.0 }
+    x: { min: -0.03, max: 0.03 },
+    y: { min:  0.02, max: 0.10 }
 }
 
 
 window.onload = function() {
     setupCanvas()
     initSnow()
-    window.setInterval(updateSnow, 30)
+    window.requestAnimationFrame(updateSnow)
 }
 
 
@@ -42,7 +43,7 @@ function resetFlake(flake={}, y=null) {
     const initVY = getInitVelocity(flake.r)
 
     flake.v = {
-        x: velocity.x.target,
+        x: 0,
         y: initVY, max: initVY * 2
     }
 
@@ -61,13 +62,16 @@ function getInitVelocity(r) {
 }
 
 
-function updateSnow() {
+function updateSnow(t) {
     clear()
     
     for(let i = 0; i < snow.length; i++) {
-        updateFlake(snow[i])
+        updateFlake(snow[i], t - last)
         drawFlake(snow[i])
     }
+
+    last = t
+    window.requestAnimationFrame(updateSnow)
 }
 
 
@@ -76,20 +80,21 @@ function clear() {
 }
 
 
-function updateFlake(f) {
+function updateFlake(f, delta) {
     f.v.x = updateVelocity(f.v, 'x')
     f.v.y = updateVelocity(f.v, 'y')
 
-    updatePosition(f)
+    updatePosition(f, delta)
 }
 
 
 function updateVelocity(v1, dir) {
     const min = velocity[dir].min
     const max = dir === 'y' ? v1.max : velocity[dir].max
-    const rng = (max - min) * 0.2
-
-    v2 = v1[dir] + (Math.random() * rng) - (rng / 2)
+    const rng = (max - min) * 0.1
+    
+    const dv = (Math.random() * rng) - (rng / 2)
+    v2 = v1[dir] + dv 
 
     if(v2 < min) { return min }
     if(v2 > max) { return max }
@@ -97,9 +102,9 @@ function updateVelocity(v1, dir) {
 }
 
 
-function updatePosition(f) {
-    f.x = f.x + f.v.x
-    f.y = f.y + f.v.y
+function updatePosition(f, delta) {
+    f.x = f.x + (f.v.x * delta)
+    f.y = f.y + (f.v.y * delta)
 
     if(f.x > cvs.width || f.y > cvs.height) {
         f = resetFlake(f, -10)
